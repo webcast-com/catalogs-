@@ -174,9 +174,9 @@
       const article = document.createElement('article');
       article.className = 'card';
 
-      const img = document.createElement('12.jpp');
+      const img = document.createElement('img');
       img.loading = 'lazy';
-      img.src = item.img[1];
+      img.src = item.img[0];
       img.alt = item.title;
       img.addEventListener('click', () => openModal(item.id));
 
