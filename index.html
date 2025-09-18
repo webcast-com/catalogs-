@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Catalog — Hero, Categories & WhatsApp</title>
+  <style>
+    :root{
+      --accent:#6b21a8;
+      --muted:#6b7280;
+      --bg:#0f172a;
+      --card:#0b1220;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Segoe UI,Roboto,system-ui,-apple-system;background:linear-gradient(180deg,#020617 0%, #071129 100%);color:#e6eef8;min-height:100vh;display:flex;flex-direction:column}
+
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter: blur(6px);position:sticky;top:0;z-index:10}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#0ea5a5);display:inline-grid;place-items:center;font-weight:700}
+    nav{display:flex;gap:12px;align-items:center}
+    .category-btn{background:transparent;border:1px solid rgba(255,255,255,0.05);padding:8px 12px;border-radius:8px;color:var(--muted);cursor:pointer}
+    .category-btn.active{border-color:rgba(255,255,255,0.08);color:#fff;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
+
+    .hero{padding:48px 28px;display:grid;grid-template-columns:1fr 420px;gap:36px;align-items:center}
+    .hero-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:36px;border-radius:16px}
+    .hero h1{font-size:34px;margin:0 0 12px}
+    .hero p{margin:0 0 18px;color:var(--muted)}
+    .search{display:flex;gap:10px}
+    .search input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    .search button{padding:10px 14px;border-radius:10px;border:none;background:var(--accent);color:white;cursor:pointer}
+
+    .hero-preview{padding:18px;border-radius:12px;background:linear-gradient(135deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));display:grid;grid-template-rows:1fr auto}
+    .hero-preview img{width:100%;height:260px;object-fit:cover;border-radius:10px}
+    .hero-preview .meta{padding-top:12px}
+
+    .container{padding:0 28px 80px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;margin-top:18px}
+    .card{background:var(--card);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column}
+    .card img{width:100%;height:160px;object-fit:cover;cursor:pointer}
+    .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
+    .title{font-weight:600;margin:0 0 6px}
+    .meta{color:var(--muted);font-size:13px;margin-bottom:12px}
+    .actions{display:flex;gap:8px;align-items:center;margin-top:auto}
+    .btn{flex:1;padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+    .btn.primary{background:var(--accent);color:white}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .wa-btn{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;background:#25D366;color:#042;white-space:nowrap;font-weight:600;text-decoration:none}
+
+    footer{margin-top:auto;padding:28px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);display:flex;justify-content:space-between;align-items:center}
+    footer .small{color:var(--muted);font-size:13px}
+
+    @media (max-width:900px){.hero{grid-template-columns:1fr;}.hero-preview img{height:180px}.hero{padding:28px}}
+
+    /* Modal Gallery */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:1000}
+    .modal.active{display:flex}
+    .modal-content{position:relative;max-width:90%;max-height:90%;display:flex;flex-direction:column;align-items:center}
+    .modal-content img{max-width:100%;max-height:80vh;border-radius:10px}
+    .close-btn{position:absolute;top:10px;right:10px;background:#000;border:none;color:white;font-size:24px;cursor:pointer}
+    .thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center}
+    .thumbs img{width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent}
+    .thumbs img.active{border-color:var(--accent)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">C</div>
+      <div>
+        <div style="font-weight:700">Catalog</div>
+        <div style="font-size:12px;color:var(--muted)">A simple items listing</div>
+      </div>
+    </div>
+    <nav id="categories" aria-label="Categories"></nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-card">
+        <h1>Discover items — filter by category</h1>
+        <p>Browse our curated items. Click any WhatsApp button to message the seller directly.</p>
+
+        <div class="search" role="search">
+          <input id="searchInput" placeholder="Search items..." aria-label="Search items" />
+          <button id="searchBtn">Search</button>
+        </div>
+      </div>
+
+      <aside class="hero-preview">
+        <img id="heroImg" src="https://via.placeholder.com/800x520?text=Featured+Item" alt="Featured">
+        <div class="meta" style="padding:10px">
+          <div style="font-weight:700">Featured: Premium placeholder</div>
+          <div style="color:var(--muted);font-size:13px">Tap WhatsApp on any card to inquire.</div>
+        </div>
+      </aside>
+    </section>
+
+    <div class="container">
+      <div id="grid" class="grid" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div>
+      <div style="font-weight:700">Catalog</div>
+      <div class="small">Built with plain HTML/CSS/JS</div>
+    </div>
+    <div class="small">© <span id="year"></span> Catalog demo</div>
+  </footer>
+
+  <!-- Modal -->
+  <div id="modal" class="modal" role="dialog" aria-hidden="true">
+    <div class="modal-content" role="document">
+      <button class="close-btn" aria-label="Close gallery">×</button>
+      <img id="modalImg" src="" alt="Preview">
+      <div id="thumbs" class="thumbs" aria-hidden="false"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Sample data =====
+    const ITEMS = [
+      {id:1,category:'electronics',title:'Smartphone X',price:'KSH 25,000',img:[
+        'https://via.placeholder.com/1200x800?text=Smartphone+Front',
+        'https://via.placeholder.com/1200x800?text=Smartphone+Back',
+        'https://via.placeholder.com/1200x800?text=Smartphone+Side'
+      ],phone:'254700111222',desc:'Good condition, 6 months warranty'},
+
+      {id:2,category:'fashion',title:'Leather Jacket',price:'KSH 7,500',img:[
+        'https://via.placeholder.com/1200x800?text=Jacket+Front',
+        'https://via.placeholder.com/1200x800?text=Jacket+Back'
+      ],phone:'254700333444',desc:'Stylish and warm'},
+
+      {id:3,category:'home',title:'Modern Lamp',price:'KSH 1,800',img:[
+        'https://via.placeholder.com/1200x800?text=Lamp'
+      ],phone:'254700555666',desc:'Soft warm light'}
+    ];
+
+    // ===== DOM refs =====
+    const categoriesEl = document.getElementById('categories');
+    const gridEl = document.getElementById('grid');
+    const yearEl = document.getElementById('year');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modalImg');
+    const thumbs = document.getElementById('thumbs');
+    const closeBtn = modal.querySelector('.close-btn');
+
+    yearEl.textContent = new Date().getFullYear();
+
+    // categories
+    const categories = ['all', ...Array.from(new Set(ITEMS.map(i => i.category)))];
+
+    function renderCategoryButtons(){
+      categoriesEl.innerHTML = '';
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'category-btn' + (cat === 'all' ? ' active' : '');
+        btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+        btn.dataset.cat = cat;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          filterAndRender(cat, searchInput.value.trim());
+        });
+        categoriesEl.appendChild(btn);
+      });
+    }
+
+    // Build card using DOM methods (avoids HTML-quoting issues)
+    function buildCard(item){
+      const article = document.createElement('article');
+      article.className = 'card';
+
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = item.img[0];
+      img.alt = item.title;
+      img.addEventListener('click', () => openModal(item.id));
+
+      const body = document.createElement('div');
+      body.className = 'body';
+
+      const title = document.createElement('div');
+      title.className = 'title';
+      title.textContent = item.title;
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = `${item.price} • ${item.desc}`;
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const wa = document.createElement('a');
+      wa.className = 'wa-btn';
+      // build a safe wa.me link using encodeURIComponent
+      const msg = `Hello, I'm interested in: ${item.title}`;
+      wa.href = `https://wa.me/${item.phone}?text=${encodeURIComponent(msg)}`;
+      wa.target = '_blank';
+      wa.rel = 'noopener noreferrer';
+      wa.textContent = 'Message';
+
+      const galleryBtn = document.createElement('button');
+      galleryBtn.className = 'btn ghost';
+      galleryBtn.type = 'button';
+      galleryBtn.textContent = 'Gallery';
+      galleryBtn.addEventListener('click', () => openModal(item.id));
+
+      actions.appendChild(wa);
+      actions.appendChild(galleryBtn);
+
+      body.appendChild(title);
+      body.appendChild(meta);
+      body.appendChild(actions);
+
+      article.appendChild(img);
+      article.appendChild(body);
+
+      return article;
+    }
+
+    function renderGrid(list){
+      gridEl.innerHTML = '';
+      if(!list || list.length === 0){
+        const msg = document.createElement('div');
+        msg.style.color = 'var(--muted)';
+        msg.style.padding = '24px';
+        msg.textContent = 'No items found.';
+        gridEl.appendChild(msg);
+        return;
+      }
+      list.forEach(item => gridEl.appendChild(buildCard(item)));
+    }
+
+    function filterAndRender(category = 'all', query = ''){
+      let list = ITEMS.slice();
+      if(category && category !== 'all') list = list.filter(i => i.category === category);
+      if(query) list = list.filter(i => (`${i.title} ${i.desc} ${i.price}`).toLowerCase().includes(query.toLowerCase()));
+      renderGrid(list);
+    }
+
+    // ===== Modal gallery logic =====
+
+    // open modal for item id
+    window.openModal = function(id){
+      const item = ITEMS.find(i => i.id === id);
+      if(!item) return;
+      setGallery(item.img);
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      // focus for accessibility
+      closeBtn.focus();
+    };
+
+    window.closeModal = function(){
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      // restore focus
+    };
+
+    function setGallery(images){
+      thumbs.innerHTML = '';
+      if(!images || images.length === 0){
+        modalImg.src = '';
+        modalImg.alt = 'No images';
+        return;
+      }
+      // set primary
+      modalImg.src = images[0];
+      modalImg.alt = 'Preview image';
+
+      images.forEach((src, idx) => {
+        const t = document.createElement('img');
+        t.src = src;
+        t.alt = `Thumbnail ${idx+1}`;
+        t.tabIndex = 0;
+        if(idx === 0) t.classList.add('active');
+        t.addEventListener('click', () => {
+          modalImg.src = src;
+          // update active thumb
+          thumbs.querySelectorAll('img').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+        });
+        t.addEventListener('keydown', (e) => { if(e.key === 'Enter') t.click(); });
+        thumbs.appendChild(t);
+      });
+    }
+
+    // close handlers
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
+
+    // ===== Search handlers =====
+    searchBtn.addEventListener('click', () => {
+      const activeBtn = document.querySelector('.category-btn.active');
+      const active = activeBtn ? activeBtn.dataset.cat : 'all';
+      filterAndRender(active, searchInput.value.trim());
+    });
+    searchInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') searchBtn.click(); });
+
+    // ===== Initial render =====
+    renderCategoryButtons();
+    filterAndRender('all', '');
+
+    // ===== Quick developer test helpers (not user-facing tests) =====
+    // These basic checks help catch common issues when embedding data.
+    (function runQuickChecks(){
+      const missingPhones = ITEMS.filter(i => !i.phone || !/^\d{8,}$/.test(i.phone));
+      if(missingPhones.length){
+        console.warn('Some items are missing valid phone numbers (used for WhatsApp links):', missingPhones.map(i=>i.id));
+      }
+      const noImages = ITEMS.filter(i => !i.img || i.img.length === 0);
+      if(noImages.length){
+        console.warn('Some items have no images:', noImages.map(i=>i.id));
+      }
+    })();
+
+  </script>
+</body>
+</html>
